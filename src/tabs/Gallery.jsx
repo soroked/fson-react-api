@@ -23,6 +23,7 @@ export class Gallery extends Component {
   }
 
   fetchImages = async (value, currPage) => {
+    this.setState({ isLoading: true });
     try {
       const response = await ImageService.getImages(value, currPage);
 
@@ -30,19 +31,52 @@ export class Gallery extends Component {
         photos: [...prevState.photos, ...response.photos],
         totalResults: response.total_results,
       }));
-    } catch {}
+    } catch(error) {
+      this.setState({ error: error.message });
+    } finally {
+      this.setState({ isLoading: false });
+    }
   };
 
   handleSubmit = data => {
-    this.setState({ query: data });
+    this.setState({
+      query: data,
+      page: 1,
+      photos: [],
+      totalResults: 0,
+      error: null,
+      isLoading: false,
+    });
+  };
+
+  loadMore = () => {
+    this.setState(prevState => ({ page: prevState.page + 1 }));
   };
 
   render() {
-    console.log(this.state);
+    const { query, photos, totalResults, isLoading, error } = this.state;
+    const noImg = query && !totalResults && !isLoading
     return (
       <>
-        {/* <Text textAlign="center">Sorry. There are no images ... 😭</Text> */}
+        
         <SearchForm onSubmit={this.handleSubmit} />
+        {isLoading && <Text textAlign="center">Loading ... 😭</Text>}
+        {error && <Text textAlign="center">Sorry, restart 😭</Text>}
+        {noImg && <Text textAlign="center">Sorry, there are no img 😭</Text>}
+        <Grid>
+          {photos.map(({ id, avg_color, alt, src: { large } }) => {
+            return (
+              <GridItem key={id}>
+                <CardItem color={avg_color}>
+                  <img src={large} alt={alt} />
+                </CardItem>
+              </GridItem>
+            );
+          })}
+        </Grid>
+        {photos.length < totalResults && (
+          <Button onClick={this.loadMore}>Load More...</Button>
+        )}
       </>
     );
   }
