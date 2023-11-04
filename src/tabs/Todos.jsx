@@ -3,7 +3,67 @@ import { nanoid } from 'nanoid';
 import { Grid, GridItem, SearchForm, EditForm, Text, Todo } from 'components';
 
 export class Todos extends Component {
+  state = {
+    todos: [],
+    isEditing: false,
+    currentTodo: {},
+  };
+
+  componentDidMount() {
+    const todos = JSON.parse(localStorage.getItem('todos'));
+    if (todos) {
+      this.setState({ todos: todos });
+    }
+  }
+
+  componentDidUpdate(_, prevState) {
+    if (prevState.todos !== this.state.todos) {
+      localStorage.setItem('todos', JSON.stringify(this.state.todos));
+    }
+  }
+
+  onSubmit = value => {
+    const todo = {
+      text: value,
+      id: nanoid(),
+    };
+
+    this.setState(prevState => ({ todos: [...prevState.todos, todo] }));
+  };
+
+  deleteTodo = id => {
+    this.setState(prevState => ({
+      todos: prevState.todos.filter(todo => todo.id !== id),
+    }));
+  };
+
+  handleEditTodo = todo => {
+    this.setState({ currentTodo: { ...todo }, isEditing: true });
+  };
+
   render() {
-    return <Text>Todos</Text>;
+    const { todos, isEditing, currentTodo } = this.state;
+    return (
+      <>
+        {isEditing ? (
+          <EditForm currentTodo={currentTodo} />
+        ) : (
+          <SearchForm onSubmit={this.onSubmit} />
+        )}
+        <Grid>
+          {todos.map(({ text, id }, idx) => (
+            <GridItem key={id}>
+              <Todo
+                text={text}
+                idx={idx}
+                deleteTodo={this.deleteTodo}
+                id={id}
+                onEdit={this.handleEditTodo}
+              />
+            </GridItem>
+          ))}
+        </Grid>
+      </>
+    );
   }
 }
