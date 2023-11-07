@@ -7,6 +7,7 @@ export class Todos extends Component {
     todos: [],
     isEditing: false,
     currentTodo: {},
+    newVaue: '',
   };
 
   componentDidMount() {
@@ -41,12 +42,39 @@ export class Todos extends Component {
     this.setState({ currentTodo: { ...todo }, isEditing: true });
   };
 
+  handleCancel = () => {
+    this.setState({ isEditing: false });
+  };
+
+  handleInputEditChange = evt => {
+    this.setState(prevState => ({
+      currentTodo: { text: evt.target.value, id: prevState.currentTodo.id },
+    }));
+  };
+
+  handleEditFormUpdate = evt => {
+    evt.preventDefault();
+
+    this.setState(prevState => ({
+      todos: prevState.todos.map(todo =>
+        todo.id === prevState.currentTodo.id ? prevState.currentTodo : todo
+      ),
+      currentTodo: { id: '', text: '' },
+      isEditing: false,
+    }));
+  };
+
   render() {
     const { todos, isEditing, currentTodo } = this.state;
     return (
       <>
         {isEditing ? (
-          <EditForm currentTodo={currentTodo} />
+          <EditForm
+            currentTodo={currentTodo}
+            onCancel={this.handleCancel}
+            onChange={this.handleInputEditChange}
+            onUpdate={this.handleEditFormUpdate}
+          />
         ) : (
           <SearchForm onSubmit={this.onSubmit} />
         )}
